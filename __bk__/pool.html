@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Liquidity Pools | Modern DeFi Interface</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.7.1/gsap.min.js"></script>
+
+    <!-- Include existing styles from swap.html -->
+
+    <style>
+      /* Define color variables */
+      :root {
+        --primary-gradient: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+        --accent-gradient: linear-gradient(45deg, #45b7d1, #96c93d);
+        --glow-color: rgba(78, 205, 196, 0.2);
+      }
+
+      .playfair {
+        font-family: "Playfair Display", serif;
+      }
+
+      .glass-effect {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .dark .glass-effect {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .token-input:focus {
+        outline: none;
+        box-shadow: none;
+      }
+
+      .pattern {
+        background-image: radial-gradient(
+          circle at 1px 1px,
+          rgba(0, 0, 0, 0.1) 1px,
+          transparent 0
+        );
+        background-size: 40px 40px;
+      }
+
+      .dark .pattern {
+        background-image: radial-gradient(
+          circle at 1px 1px,
+          rgba(255, 255, 255, 0.1) 1px,
+          transparent 0
+        );
+      }
+
+      .gradient-border {
+        background: linear-gradient(
+          90deg,
+          #ff6b6b,
+          #4ecdc4,
+          #45b7d1,
+          #96c93d,
+          #ff6b6b
+        );
+        background-size: 400% 400%;
+        animation: gradient 20s ease infinite;
+        position: relative;
+        overflow: hidden;
+      }
+
+      @keyframes gradient {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .gradient-border::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transform: translateX(-100%);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .floating {
+        animation: floating 3s ease-in-out infinite;
+      }
+
+      @keyframes floating {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .blur-backdrop {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+
+      /* X Logo Animation */
+      .logo-x {
+        animation: logoFloat 6s ease-in-out infinite;
+      }
+
+      @keyframes logoFloat {
+        0%,
+        100% {
+          transform: translateY(0) rotate(0);
+        }
+        25% {
+          transform: translateY(-5px) rotate(2deg);
+        }
+        75% {
+          transform: translateY(5px) rotate(-2deg);
+        }
+      }
+
+      /* Enhanced card effects */
+      .glow-effect {
+        position: relative;
+      }
+
+      .glow-effect::before {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        background: var(--primary-gradient);
+        border-radius: inherit;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .glow-effect:hover::before {
+        opacity: 1;
+      }
+
+      /* Wallet Modal Styles */
+      .modal-backdrop {
+        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-backdrop.active {
+        opacity: 1;
+      }
+
+      .wallet-modal {
+        transform: translateY(20px);
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .wallet-modal.active {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .wallet-option {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .wallet-option::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(45deg, var(--glow-color), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .wallet-option:hover::before {
+        opacity: 1;
+      }
+
+      .wallet-icon {
+        transition: transform 0.3s ease;
+      }
+
+      .wallet-option:hover .wallet-icon {
+        transform: scale(1.1);
+      }
+
+      .shimmer-effect {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .shimmer-effect::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transform: rotate(45deg);
+        animation: shimmer 2s infinite;
+      }
+    </style>
+    <style>
+      /* ... (include all existing styles from swap.html) ... */
+
+      /* Additional Pool-specific styles */
+      .pool-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .pool-card:hover {
+        transform: translateY(-2px);
+      }
+
+      .liquidity-gauge {
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          #4ecdc4 var(--value),
+          rgba(78, 205, 196, 0.2) var(--value)
+        );
+      }
+
+      .apr-badge {
+        background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+        animation: shimmer 2s infinite linear;
+      }
+    </style>
+    <style>
+      /* Enhanced Pool-specific styles */
+      .pool-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        perspective: 1000px;
+      }
+
+      .pool-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transform-style: preserve-3d;
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+      }
+
+      .pool-card:hover {
+        transform: translateY(-5px) rotateX(5deg);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+      }
+
+      .token-pair {
+        position: relative;
+        transform-style: preserve-3d;
+        transform: translateZ(20px);
+      }
+
+      .token-pair::after {
+        content: "";
+        position: absolute;
+        inset: -10px;
+        background: radial-gradient(
+          circle at center,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
+        filter: blur(15px);
+        z-index: -1;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        position: relative;
+      }
+
+      .stat-item {
+        position: relative;
+        overflow: hidden;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        transition: transform 0.3s ease;
+      }
+
+      .stat-item:hover {
+        transform: scale(1.02);
+      }
+
+      .liquidity-bar {
+        height: 4px;
+        background: linear-gradient(
+          90deg,
+          rgba(78, 205, 196, 0.2),
+          rgba(78, 205, 196, 0.8)
+        );
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .liquidity-bar::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.3),
+          transparent
+        );
+        animation: liquidityFlow 2s linear infinite;
+      }
+
+      @keyframes liquidityFlow {
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .pool-actions button {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .pool-actions button::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 150%;
+        height: 150%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 255, 255, 0.1) 0%,
+          transparent 70%
+        );
+        transform: translate(-50%, -50%) scale(0);
+        transition: transform 0.5s ease;
+      }
+
+      .pool-actions button:hover::before {
+        transform: translate(-50%, -50%) scale(1);
+      }
+    </style>
+    <style>
+      /* Apple-inspired design variables */
+      :root {
+        --apple-blur: blur(20px);
+        --apple-white: rgba(255, 255, 255, 0.92);
+        --apple-dark: rgba(22, 22, 23, 0.8);
+        --apple-gradient: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.1),
+          rgba(255, 255, 255, 0.05)
+        );
+        --apple-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        --apple-radius: 20px;
+      }
+
+      /* Apple-style typography */
+      .apple-header {
+        font-size: 56px;
+        line-height: 1.07143;
+        letter-spacing: -0.005em;
+        font-weight: 600;
+      }
+
+      .apple-subheader {
+        font-size: 28px;
+        line-height: 1.10722;
+        letter-spacing: 0.004em;
+        font-weight: 400;
+      }
+
+      .pool-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      .pool-card {
+        background: var(--apple-gradient);
+        backdrop-filter: var(--apple-blur);
+        border-radius: var(--apple-radius);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: var(--apple-shadow);
+        width: 400px;
+        padding: 32px;
+        transition: all 0.5s cubic-bezier(0.42, 0, 0.58, 1);
+      }
+
+      .pool-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      /* Apple-style search bar */
+      .search-container {
+        position: relative;
+        max-width: 680px;
+        margin: 0 auto 48px;
+      }
+
+      .search-input {
+        width: 100%;
+        height: 44px;
+        padding: 0 16px 0 40px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        font-size: 17px;
+        letter-spacing: -0.022em;
+        transition: all 0.3s ease;
+      }
+
+      .search-input:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      /* Update existing styles for Apple aesthetic */
+      .stat-item {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: var(--apple-blur);
+        border-radius: 16px;
+        padding: 20px;
+      }
+
+      .liquidity-bar {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+      }
+
+      .liquidity-bar::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 78%;
+        background: linear-gradient(90deg, #2d88ff, #4cc2ff);
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white min-h-screen overflow-x-hidden"
+  >
+    <!-- Animated Background -->
+    <div id="animated-bg" class="fixed inset-0 -z-10">
+      <canvas id="particles"></canvas>
+    </div>
+
+    <!-- Floating Navigation (same as swap page) -->
+    <nav
+      class="fixed top-0 left-0 right-0 z-50 blur-backdrop border-b border-white/10"
+    >
+      <!-- ... (same navigation as swap.html) ... -->
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 pt-32 pb-20 relative">
+      <!-- Header Section -->
+      <div class="max-w-4xl mx-auto text-center mb-16">
+        <h1
+          class="text-5xl font-bold playfair mb-6 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent"
+        >
+          Liquidity Pools
+        </h1>
+        <p class="text-lg text-gray-400">
+          Provide liquidity and earn rewards from trading fees
+        </p>
+      </div>
+
+      <!-- Pool Actions -->
+      <div class="max-w-4xl mx-auto mb-12">
+        <div class="flex flex-wrap gap-4 justify-between items-center">
+          <!-- Search and Filter -->
+          <div class="flex gap-4 flex-1">
+            <div class="relative flex-1">
+              <input
+                type="text"
+                placeholder="Search pools..."
+                class="w-full bg-white/5 rounded-xl px-4 py-3 pl-10 focus:outline-none focus:ring-2 ring-blue-500/50"
+              />
+              <i
+                class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              ></i>
+            </div>
+            <button
+              class="bg-white/5 p-3 rounded-xl hover:bg-white/10 transition-colors"
+            >
+              <i class="fas fa-filter"></i>
+            </button>
+          </div>
+
+          <!-- Create Pool Button -->
+          <button
+            class="px-6 py-3 rounded-xl gradient-border text-white font-medium"
+          >
+            <i class="fas fa-plus mr-2"></i> Create Pool
+          </button>
+        </div>
+      </div>
+
+      <!-- Pool Statistics -->
+      <div
+        class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12"
+      >
+        <div class="bg-white/5 rounded-2xl p-6 backdrop-blur-lg floating">
+          <div class="text-sm text-gray-400">Total Value Locked</div>
+          <div class="text-2xl font-bold mt-1">$245.8M</div>
+          <div class="text-green-400 text-sm mt-1">+2.5%</div>
+        </div>
+        <div
+          class="bg-white/5 rounded-2xl p-6 backdrop-blur-lg floating"
+          style="animation-delay: 0.2s"
+        >
+          <div class="text-sm text-gray-400">24h Volume</div>
+          <div class="text-2xl font-bold mt-1">$12.4M</div>
+          <div class="text-green-400 text-sm mt-1">+5.8%</div>
+        </div>
+        <div
+          class="bg-white/5 rounded-2xl p-6 backdrop-blur-lg floating"
+          style="animation-delay: 0.4s"
+        >
+          <div class="text-sm text-gray-400">Active Pools</div>
+          <div class="text-2xl font-bold mt-1">186</div>
+          <div class="text-green-400 text-sm mt-1">+3</div>
+        </div>
+      </div>
+
+      <!-- Pool List -->
+      <div class="max-w-6xl mx-auto">
+        <div class="pool-grid">
+          <!-- Pool Card -->
+          <div class="pool-card rounded-2xl p-6">
+            <div class="token-pair flex items-center gap-4 mb-6">
+              <div class="relative w-20 h-20">
+                <div class="relative">
+                  <img
+                    src="https://cryptologos.cc/logos/ethereum-eth-logo.png"
+                    class="w-20 h-20 rounded-full p-2 bg-white/5"
+                  />
+                  <img
+                    src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png"
+                    class="w-12 h-12 absolute -right-2 -bottom-2 rounded-full bg-white/5 p-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <h3
+                  class="text-2xl font-bold bg-gradient-to-r from-blue-400 to-teal-400 bg-clip-text text-transparent"
+                >
+                  ETH/USDC
+                </h3>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="px-2 py-1 rounded-lg bg-white/5 text-sm"
+                    >0.05% Fee</span
+                  >
+                  <span
+                    class="px-2 py-1 rounded-lg bg-green-500/20 text-green-400 text-sm"
+                    >Active</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div class="stats-grid mb-6">
+              <div class="stat-item">
+                <div class="text-sm text-gray-400 mb-1">TVL</div>
+                <div class="text-xl font-bold">$42.5M</div>
+                <div class="text-xs text-green-400 mt-1">↑ 2.4%</div>
+              </div>
+              <div class="stat-item">
+                <div class="text-sm text-gray-400 mb-1">APR</div>
+                <div class="text-xl font-bold text-green-400">12.8%</div>
+                <div class="text-xs text-green-400 mt-1">↑ 0.2%</div>
+              </div>
+              <div class="stat-item">
+                <div class="text-sm text-gray-400 mb-1">Volume 24h</div>
+                <div class="text-xl font-bold">$2.4M</div>
+                <div class="text-xs text-green-400 mt-1">↑ 5.7%</div>
+              </div>
+            </div>
+
+            <div class="mb-6">
+              <div class="flex justify-between text-sm mb-2">
+                <span class="text-gray-400">Liquidity Utilization</span>
+                <span class="text-white">78%</span>
+              </div>
+              <div class="liquidity-bar"></div>
+            </div>
+
+            <div class="pool-actions flex gap-4">
+              <button
+                class="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 py-3 rounded-xl"
+              >
+                <i class="fas fa-plus-circle mr-2"></i>
+                Add Liquidity
+              </button>
+              <button
+                class="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl"
+              >
+                <i class="fas fa-minus-circle mr-2"></i>
+                Remove Liquidity
+              </button>
+            </div>
+          </div>
+
+          <!-- Add more pool cards with different token pairs -->
+          <!-- Copy the pool card structure and change the tokens, values -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Include the particle animation script from swap.html -->
+    <script>
+      // ... (include the particle animation script from swap.html) ...
+    </script>
+  </body>
+</html>
