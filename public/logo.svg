@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-    <!-- Y -->
-    <path class="logo-path" d="M15 20 L35 45 L55 20 M35 45 L35 80" />
-    <!-- E -->
-    <path class="logo-path" d="M45 20 H85 V30 H55 V45 H75 V55 H55 V70 H85 V80 H45 V20" />
-</svg> 
